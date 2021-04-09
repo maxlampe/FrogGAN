@@ -1,0 +1,6 @@
+*.p
+*.ipynb
+*.jpg
+/tmp/
+/model_backups/
+.idea
