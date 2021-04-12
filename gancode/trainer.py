@@ -58,6 +58,8 @@ class GanTrainer:
         self.netG.train()
         if bfid_study:
             fid_list = []
+        bnew_fid = True
+        fid_step = 10
 
         for epoch in range(num_epochs):
             for i, data in enumerate(self.dataloader, 0):
@@ -159,19 +161,37 @@ class GanTrainer:
                 self.D_losses.append(errD.item())
         
                 # Check how the generator is doing by saving G's output on fixed_noise
-                if (self.iters % 500 == 0) or ((epoch == num_epochs-1) and (i == len(self.dataloader)-1)):
+                if (self.iters % 250 == 0) or ((epoch == num_epochs-1) and (i == len(self.dataloader)-1)):
                     with torch.no_grad():
                         fake = self.netG(self.fixed_noise).detach().cpu()
                     self.img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
-                    # self.gan_net.save_models(label="tmp", outdir=".")
+                    self.gan_net.save_models(tag="tmp", outdir=".")
                     self.save_object([self.iters, sigma, self.G_losses, self.D_losses, self.img_list, ], "run_infos.p")  
                     
                 self.iters += 1
             
             if bfid_study:
-                if (epoch % 50 == 0) and epoch > 150:
+                if (epoch % fid_step == 0) and epoch > 1:
                     self.fid = self.calc_fid()
                     fid_list.append(np.asarray([epoch, self.fid]))
+                    bnew_fid = True
+                    if bverbose:
+                        print(f"Curr FID: {self.fid}")
+            
+            if self.fid is not None:
+                if self.fid <= 170:
+                    fid_step = 5
+                    if self.fid <= 140:
+                        fid_step = 3
+                        if self.fid <= 130:
+                            fid_step = 2
+                else:
+                    fid_step = 10
+                
+                if self.fid <= 140. and bnew_fid == True:
+                    print(f"Found good one FID: {self.fid:0.2f}")
+                    self.gan_net.save_models(tag=f"fid{int(self.fid)}_{epoch}", outdir=".")
+                    bnew_fid = False
                     
         self.fid = self.calc_fid()
         fid_list.append(np.asarray([epoch, self.fid]))
@@ -183,6 +203,10 @@ class GanTrainer:
             if bverbose:
                 print(f"FID list:\n {fid_list.T}")
                 print(f"Best FID value: {fid_list.T[1].min()}")
+                
+                plt.plot(fid_list.T[0], fid_list.T[1])
+                plt.show()
+                
             return [fid_list.T[0][fid_list.T[1].argmin()], fid_list.T[1].min()]
         else:
             return [num_epochs, self.fid]
@@ -225,7 +249,7 @@ class GanTrainer:
         plt.imshow(np.transpose(self.img_list[-1],(1,2,0)))
         plt.show()
         
-    def gen_fakes(self, n_gen_images: int = 6, upscale: float = 4.):
+    def gen_fakes(self, n_gen_images: int = 6, upscale: float = 2.):
         """"""
         
         self.netG.eval()
@@ -236,13 +260,13 @@ class GanTrainer:
         up = torch.nn.Upsample(scale_factor=upscale)
         fake = up(fake)
         
-        fig, axs = plt.subplots(1, n_gen_images, figsize=(35, 35))
+        fig, axs = plt.subplots(1, n_gen_images, figsize=(25, 25))
         
         for ind, fake_im in enumerate(fake):
-          im = vutils.make_grid(fake_im, padding=2, normalize=True)
-          im = np.transpose(im, (1, 2, 0))
-          print(im.shape)
-          axs.flat[ind].imshow(im)
+            im = vutils.make_grid(fake_im, padding=2, normalize=True)
+            im = np.transpose(im, (1, 2, 0))
+            axs.flat[ind].imshow(im)
+            axs.flat[ind].axis("off")
         plt.show()
 
     def _create_tmp_images(self, path: str, no_images: int):
@@ -263,7 +287,6 @@ class GanTrainer:
             real = real_batch[0].to(self.device)[ind]
             save_image(real, path + f"/{ind}.jpg")
         
-
     def calc_fid(self, no_images: int = 128):
         """Use pytorch_fid to calculate fid value for real and generated images"""
         

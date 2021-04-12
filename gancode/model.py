@@ -96,29 +96,29 @@ class FrogGan:
           with open('run_infos.p', 'rb') as input:
             self.run_infos = pickle.load(input)
             
-    def load_models(label = None, outdir = None):
+    def load_models(self, tag = None, outdir = None):
         """Import generator and discriminator state dictionaries"""
     
         if outdir is None:
             outdir = "model_backups"
-        if label is None:
-            label = self.train_label
+        if tag is None:
+            tag = self.train_label
     
-        self.netG.load_state_dict(torch.load(f"{outdir}/netG_state_dict_{label}.pt"))
-        self.netD.load_state_dict(torch.load(f"{outdir}/netD_state_dict_{label}.pt"))
+        self.netG.load_state_dict(torch.load(f"{outdir}/netG_state_dict_{tag}.pt"))
+        self.netD.load_state_dict(torch.load(f"{outdir}/netD_state_dict_{tag}.pt"))
         self.netG.eval()
         self.netD.eval()
     
-    def save_models(label = None, outdir = None):
+    def save_models(self, tag = None, outdir = None):
         """Write generator and discriminator state dictionaries"""
     
         if outdir is None:
             outdir = "model_backups"
-        if label is None:
-            label = self.train_label
+        if tag is None:
+            tag = self.train_label
     
-        torch.save(self.netG.state_dict(), f"{outdir}/netG_state_dict_{label}.pt")
-        torch.save(self.netD.state_dict(), f"{outdir}/netD_state_dict_{label}.pt")
+        torch.save(self.netG.state_dict(), f"{outdir}/netG_state_dict_{tag}.pt")
+        torch.save(self.netD.state_dict(), f"{outdir}/netD_state_dict_{tag}.pt")
     
     
     @staticmethod
