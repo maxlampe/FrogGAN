@@ -11,6 +11,10 @@ import torchvision.utils as vutils
 from pytorch_fid.fid_score import calculate_fid_given_paths
 
 
+from PIL import Image, ImageEnhance
+from torchvision import transforms
+
+
 class GanTrainer:
     """"""
     def __init__(self, gan_net, dataloader, h_par_train: dict):
@@ -263,6 +267,18 @@ class GanTrainer:
         fig, axs = plt.subplots(1, n_gen_images, figsize=(25, 25))
         
         for ind, fake_im in enumerate(fake):
+            """
+            im = transforms.ToPILImage()(fake_im[0]).convert("RGB")
+            enh1 = ImageEnhance.Contrast(im)
+            fac1 = 1.1
+            enh2 = ImageEnhance.Sharpness(im)
+            fac2 = 1.1
+            im_output = enh1.enhance(fac1)
+            im_output = enh2.enhance(fac2)
+            
+            im = transforms.ToTensor()(im_output)
+            
+            """
             im = vutils.make_grid(fake_im, padding=2, normalize=True)
             im = np.transpose(im, (1, 2, 0))
             axs.flat[ind].imshow(im)
