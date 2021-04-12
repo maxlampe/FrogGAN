@@ -19,8 +19,11 @@ class gan_data:
            transforms.RandomHorizontalFlip(),
         ]
         
-        if not bno_aug:
-            trans.append(transforms.RandomResizedCrop(size=self.hpar["image_size"], scale=(0.75, 1.0)))
+        if bno_aug:
+            trans.append(transforms.Pad(padding=10, padding_mode="reflect"))
+            trans.append(transforms.RandomAffine(degrees=15., shear=0.1))
+            trans.append(transforms.Pad(padding=-10))
+            trans.append(transforms.RandomResizedCrop(size=self.hpar["image_size"], scale=(0.85, 1.0)))
             trans.append(transforms.RandomApply([transforms.ColorJitter(0.1, 0.1)], p=0.3))
             
         trans.append(transforms.Grayscale())
