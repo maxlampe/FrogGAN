@@ -285,7 +285,7 @@ class GanTrainer:
             axs.flat[ind].axis("off")
         plt.show()
 
-    def _create_tmp_images(self, path: str, no_images: int):
+    def create_tmp_images(self, path: str, no_images: int):
         """Create sample fake images for FID calculation"""
         
         self.netG.eval()
@@ -308,7 +308,7 @@ class GanTrainer:
         
         real_path = "/content/gdrive/MyDrive/FrogGAN/tmp/tmp_reals"
         fake_path = "/content/gdrive/MyDrive/FrogGAN/tmp/tmp_fakes"
-        self._create_tmp_images(path=fake_path, no_images=no_images)
+        self.create_tmp_images(path=fake_path, no_images=no_images)
         self._create_tmp_reals(path=real_path, no_images=no_images)
         
         return calculate_fid_given_paths([real_path, fake_path], batch_size=no_images, device=self.device, dims=2048)
