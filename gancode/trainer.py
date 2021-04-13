@@ -177,6 +177,7 @@ class GanTrainer:
             if bfid_study:
                 if (epoch % fid_step == 0) and epoch > 1:
                     self.fid = self.calc_fid()
+                    self.netG.train()
                     fid_list.append(np.asarray([epoch, self.fid]))
                     bnew_fid = True
                     if bverbose:
@@ -198,6 +199,7 @@ class GanTrainer:
                     bnew_fid = False
                     
         self.fid = self.calc_fid()
+        self.netG.train()
         fid_list.append(np.asarray([epoch, self.fid]))
         if bverbose:
             print(f"FID after training: {self.fid:0.3f}")
@@ -257,15 +259,12 @@ class GanTrainer:
         """"""
         
         self.netG.eval()
-        
         noise = torch.randn(n_gen_images, self.h_par_model["nz"], 1, 1, device=self.device)
         fake = self.netG(noise).detach().cpu()
-        
         up = torch.nn.Upsample(scale_factor=upscale)
         fake = up(fake)
         
         fig, axs = plt.subplots(1, n_gen_images, figsize=(25, 25))
-        
         for ind, fake_im in enumerate(fake):
             """
             im = transforms.ToPILImage()(fake_im[0]).convert("RGB")
