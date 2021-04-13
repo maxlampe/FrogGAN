@@ -21,9 +21,9 @@ class gan_data:
         
         if bno_aug:
             trans.append(transforms.Pad(padding=10, padding_mode="reflect"))
-            trans.append(transforms.RandomAffine(degrees=15., shear=0.1))
+            trans.append(transforms.RandomAffine(degrees=15., shear=5.))
             trans.append(transforms.Pad(padding=-10))
-            trans.append(transforms.RandomResizedCrop(size=self.hpar["image_size"], scale=(0.85, 1.0)))
+            trans.append(transforms.RandomResizedCrop(size=self.hpar["image_size"], scale=(0.9, 1.0)))
             trans.append(transforms.RandomApply([transforms.ColorJitter(0.1, 0.1)], p=0.3))
             
         trans.append(transforms.Grayscale())
@@ -51,7 +51,8 @@ class gan_dataloader:
             self.dataset, 
             batch_size=self.hpar["batch_size"],
             shuffle=True,
-            num_workers=self.hpar["workers"]
+            num_workers=self.hpar["workers"],
+            drop_last=True
         )
     
     def __call__(self):
