@@ -171,7 +171,7 @@ Reference
 
 This project is very much WIP and changes are constantly being made. The project is running on Google Colab and at the moment, only back-end modules are uploaded here.
 
-A final, minimized jupyter notebook with all essentials will be uploaded as well.
+A final, minimized jupyter notebook with all essentials will be uploaded as well together with the final models.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
