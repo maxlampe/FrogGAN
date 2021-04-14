@@ -1,7 +1,7 @@
 
 # FrogGAN
 
-Created and maintained by [Max Lamparth](https://github.com/maxlampe)
+> A simple PyTorch Implementation of DCGANs for creating images of drawn frogs in the style of an Austrian artist.
 
 ## Abstract
 
