@@ -54,49 +54,111 @@ These are far more representative of the final GAN output than the selected 30 i
 
 ![image](images/frognet_night1.png)
 
-Sample output (raw without cherry-picking) of the DCGAN after 50 epochs on the anime faces dataset before training
+Sample output (raw, without cherry-picking) of the DCGAN after 50 epochs on the anime faces dataset before training
 on the frog dataset. The difference in quality highlights the importance of a large dataset, or rather how that can 
 simplify the process. The pre-training and therefore the output below was done without any further efforts. 
-The quality could have been definitely improved, however, I did not think it would improve the final result and 
-therefore did not attempt it in the first place.
+The quality could have been definitely improved, however, I did not think it would improve the final result from the 
+target dataset and therefore did not attempt it in the first place.
 
 ![image](images/anime_gen.png)
 
-For using GANs to create anime faces, I would recommend the above-mentioned 
+Should one be interested in using GANs to create anime faces, I would recommend the above-mentioned 
 [animeGAN](https://github.com/jayleicn/animeGAN) project.
 
 ## Article
 
-- introduction / state goal (credit original artist)
-- emphasize challenge (target dataset < 500 images with large variety)
+As mentioned above, the goal was to create drawn frogs similar to the ones created by the artist [ManBroDude](https://manbrodude.art/).
+I'm a fan and thought it would be a challenge to train a GAN on a small dataset of just under 500 images with a large variety.
+The frogs are of different sizes, different poses, different clothing, different drawing tools and even different styles 
+(e.g. considering early posted frogs from 3 years ago). 
+
+I also wanted a GitHub profile picture of one of these frogs, but could not draw a good one myself.
   
 ### Hyper parameters
 
-- state architecture used (future: 124 dim)
-- Used techniques (DCGAN, pre-training, label smoothing, data augmentations, data pre-processing, FID, optimizer)
-- Tried without success (D noise, loss threshold training schedule)
-- used libraries / codes (pytorch, optuna, FID code, pytorch example)
+I used the same architecture from the [PyTorch DCGAN example](https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html)
+for the discriminator and generator:
+
+- Generator: Using 5 layers with transposed convolutions, batch normalization and ReLUs as activation 
+with an activation for the final layer with a Tanh function.
+- Discriminator: Using 5 layers with transposed convolutions, batch normalization and leaky ReLUs (0.2 gradient) as activation 
+with an activation for the final layer with a Sigmoid function.
+  
+Adam was the optimizer of choice, and the explicit parameters can be found in the code. 
+
+Different data augmentations were tried, but they will be discussed in the next section. 
+Before optimizing the hyper parameters, the defaults from the PyTorch example were used to try different training techniques.
+Early training suffered from severe mode collapse and to mitigate this, the learning rate for generator 
+and discriminator was increased and decreases respectively. This improved the results, but only with limited capabilities. 
+Adding noise to the discriminator input with a linear annealing schedule to the noise variance as suggested in papers and articles 
+(see references at the end) did not yield satisfying results.
+Introducing a threshold for generator and discriminator loss, where either would only be trained if above the threshold, only caused unstable training 
+results or had little effect to begin with. 
+
+Label smoothing worked rather well, especially when fine-tuning the learning rate and batch size during the hyper parameter search.
+It enabled the system to train longer and achieve better results.
+
+To compare the different methods above, an objective value was required, as comparing results by eye is tedious. 
+The Frechet-Inception-Distance was chosen, which uses the feature extraction of the Inception-V3 network and 
+calculates the difference from a real and a generated fake batch. The lower the score, the closer are the two batches.
+
+For the hyper parameter search, the _Optuna_ Python package was used. The most relevant parameters were (in order),
+
+- learning rate
+- batch size
+- label smoothing parameter
+
+The significance of the latter increased, the closer the system got to the optimum.
 
 ### Datasets and Augmentations
 
-- used datasets
-- augmentation discussion (show data pre-processing chain and different datasets)
+The frog dataset was obtained by cropped screenshotting and using photoshop to segment the background from the original motive.
+The resulting frogs were cropped again, to only focus on the frog faces and torsos, in an effort to improve the quality of the output.
+Initially, all datasets were used in combination, as a specific cropping augmentation, however, 
+towards the end of the project, all have been dropped but the frog faces.
+The first approach yielded better results in terms of general body shape of the output frogs, however, the faces themselves were blurry at best.
 
-### Hyper parameter search
 
-- hyper parameter chosen (optuna hp significance)
+The images were resized and turned into grayscale tensors of dimensions 64x64x1, as almost all of the data set is in 
+black and white and colour information would not hold any valuable information in case of the target dataset.
+
+For all datasets, random horizontal flips were applied. For the anime faces dataset, 
+no further augmentations were implemented.
+
+To enlarge the variety of the frog dataset, different augmentations were tried. In the end, 
+only a random rotation up to +- 15 degrees, random shearing by a factor of up to 5, 
+random resizing between 80% and 100% of the original size and random contrast and brightness fluctuations were applied.
 
 ### Training
 
-- show anime faces result and training parameters
-- show frog training and results
-- fid discussion
+The final FID scores achieved after the pre-training on the anime faces dataset was 144.11 +- 4.24
+and for the final frog dataset 138.16 +- 2.17.
 
-### Papers and Articles
+### References, Papers and Articles
 
-- Show final result
-- list of papers/articles
-- link to reddit post
+For anyone interested, here are a few links to papers and articles that have helped me 
+during this project and from which I've learned a lot.
+
+I've started from the [PyTorch DCGAN example](https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html),
+but only used the code fragments and started right off with a different dataset. 
+I would recommend the following two links from there:
+
+- [GitHub](https://github.com/soumith/ganhacks) useful GAN training hacks
+- [GitHub](https://github.com/nashory/gans-awesome-applications) list of cool GAN applications
+
+Found while working on this project and worth reading:
+
+- [Article](https://towardsdatascience.com/gan-ways-to-improve-gan-performance-acf37f9f59b)
+  for different ways to improve GAN performance
+- [Article](https://www.inference.vc/instance-noise-a-trick-for-stabilising-gan-training/)
+  on using instance noise during GAN training
+- [Paper](https://openaccess.thecvf.com/content_CVPR_2019/papers/Jenni_On_Stabilizing_Generative_Adversarial_Training_With_Noise_CVPR_2019_paper.pdf)
+  on using noise during GAN training
+- [Paper](https://arxiv.org/abs/1706.08500) introducing Frechet-Inception-Distance (FID) as measure
+- FID score fore PyTorch [GitHub](https://github.com/mseitzer/pytorch-fid) which I've used as well
+- Hyper parameter search [paper](https://assets.researchsquare.com/files/rs-95571/v1_stamped.pdf)
+- Transfer learning for GANs 
+  [paper](https://openaccess.thecvf.com/content_ECCV_2018/papers/yaxing_wang_Transferring_GANs_generating_ECCV_2018_paper.pdf)
 
 Reference
 [This person does not exist](https://thispersondoesnotexist.com/)
@@ -105,9 +167,7 @@ Reference
 
 This project is very much WIP and changes are constantly being made. The project is running on Google Colab and at the moment, only back-end modules are uploaded here.
 
-The project is almost complete and an in detail presentation of the results will follow soon.
-
-A final, minimized jupyter notebook will be uploaded as well.
+A final, minimized jupyter notebook with all essentials will be uploaded as well.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
