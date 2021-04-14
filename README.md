@@ -101,6 +101,7 @@ It enabled the system to train longer and achieve better results.
 To compare the different methods above, an objective value was required, as comparing results by eye is tedious. 
 The Frechet-Inception-Distance was chosen, which uses the feature extraction of the Inception-V3 network and 
 calculates the difference from a real and a generated fake batch. The lower the score, the closer are the two batches.
+The implemented FID calculation code from [GitHub](https://github.com/mseitzer/pytorch-fid) was used.
 
 For the hyper parameter search, the _Optuna_ Python package was used. The most relevant parameters were (in order),
 
@@ -115,11 +116,11 @@ The significance of the latter increased, the closer the system got to the optim
 The frog dataset was obtained by cropped screenshotting and using photoshop to segment the background from the original motive.
 The resulting frogs were cropped again, to only focus on the frog faces and torsos, in an effort to improve the quality of the output.
 Initially, all datasets were used in combination, as a specific cropping augmentation, however, 
-towards the end of the project, all have been dropped but the frog faces.
+towards the end of the project, all have been dropped, but the frog faces.
 The first approach yielded better results in terms of general body shape of the output frogs, however, the faces themselves were blurry at best.
 
 
-The images were resized and turned into grayscale tensors of dimensions 64x64x1, as almost all of the data set is in 
+The images were resized and turned into grayscale tensors of dimensions 64x64x1, as almost all the data set is in 
 black and white and colour information would not hold any valuable information in case of the target dataset.
 
 For all datasets, random horizontal flips were applied. For the anime faces dataset, 
@@ -131,8 +132,11 @@ random resizing between 80% and 100% of the original size and random contrast an
 
 ### Training
 
-The final FID scores achieved after the pre-training on the anime faces dataset was 144.11 +- 4.24
-and for the final frog dataset 138.16 +- 2.17.
+The final FID scores achieved after the pre-training on the anime faces dataset was 144.11 +- 4.24 after 48 Epochs
+and for the final frog dataset 138.16 +- 2.17 after 2499 epochs. 
+
+As the optimal batch size was 238, the last batch of the frog dataset would be very small and cause noise updates. 
+The last batch was dropped, to avoid too noisy updates.
 
 ### References, Papers and Articles
 
