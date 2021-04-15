@@ -6,8 +6,8 @@
 ## Abstract
 
 Art can be understood by everyone and transcends boundaries in society. 
-Sometimes art can become a part of your every-day life and seeing a couple of drawn, cute frogs on Reddit related to 
-current events every Wednesday kinda makes you happy. Sometimes, you realize that you cannot draw yourself, 
+Sometimes art can become a part of your everyday life and seeing a couple of drawn, cute frogs on Reddit related to 
+current events every Wednesday kinda makes you happy. Sometimes, you realize that drawing is hard, 
 but would still like to create content like it...
 
 To this end, I implemented _deep convolutional generative adversarial networks_ (DCGANs) in _PyTorch_ 
@@ -15,8 +15,8 @@ to create images of drawn frogs in the style of the Austrian artist
 [ManBroDude](https://manbrodude.art/) aka [smalllebowsky](https://www.reddit.com/user/SmallLebowsky/) on _Reddit_.
 
 The target dataset was of small size (< 500 images with large variety) and to compensate, I pre-trained the networks on 
-a larger dataset of japanese style comic faces (about 110k images) using transfer learning before adjusting all layers 
-during fine-tuning. From multiple tried training adjustments, label smoothing yielded the best results. For 
+a larger dataset of Japanese style comic faces (about 110k images) using transfer learning before adjusting all layers 
+during fine-tuning. From multiple tried training approaches, label smoothing yielded the best results. For 
 hyper parameter optimization, _Frechet-Inception-Distance_ (FID) was used as objective value.
 Experimental data augmentations (segmentation of object with and without background) together with regular data 
 augmentations (randomized crops, flips, rotations, shearing, brightness and contrast fluctuations) have been applied.
@@ -40,24 +40,23 @@ Most of them are of lesser quality. The DCGAN output resembles the original art,
 convincing results. _Creativity_ and inference from the network are there, however, signs of over-fitting, i.e. plainly
 reproducing parts of the original dataset, are present as well. 
 
-Personally, I am not satisfied with the results, but I am looking forward to trying it again with a larger dataset in a
-couple of months. After struggling to train the GAN initially, where I would have been happy with anything having 
-frog-like eyes, I am content. 
+Personally, I am not satisfied with the results, but I am looking forward to trying it again with a larger dataset in the future. 
+After struggling to train the GAN initially, where I would have been happy with anything having frog-like eyes, I am content. 
 I like how it sometimes mixes vertical and horizontal pupils to create some sort of heterochromia in
 the frogs. 
-I also like "Emmanuel" (above image, last row, second from the left).
+I also like the frog "La rana Emmanuel" (above image, last row, second from the left).
 
 ![image](images/frognet_ok2.png)
 
-Here are a few results that resemble contents from a frog-ish nightmare rather than the original art (hand-picked). 
+Here are a few results that resemble content from a frog-ish nightmare rather than the original art (hand-picked). 
 These are far more representative of the final GAN output than the selected 30 images above:
 
 ![image](images/frognet_night1.png)
 
 Sample output (raw, without cherry-picking) of the DCGAN after 50 epochs on the anime faces dataset before training
 on the frog dataset. The difference in quality highlights the importance of a large dataset, or rather how that can 
-simplify the process. The pre-training and therefore the output below was done without any further efforts. 
-The quality could have been definitely improved, however, I did not think it would improve the final result from the 
+simplify the process. The pre-training and therefore the output below was done without any further adjustments. 
+The quality could have been definitely better, however, I did not think it would improve the final result from the 
 target dataset and therefore did not attempt it in the first place.
 
 ![image](images/anime_gen.png)
@@ -79,17 +78,17 @@ I also wanted a GitHub profile picture of one of these frogs, but could not draw
 I used the same architecture from the [PyTorch DCGAN example](https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html)
 for the discriminator and generator:
 
-- Generator: Using 5 layers with transposed convolutions, batch normalization and ReLUs as activation 
-with an activation for the final layer with a Tanh function.
-- Discriminator: Using 5 layers with transposed convolutions, batch normalization and leaky ReLUs (0.2 gradient) as activation 
-with an activation for the final layer with a Sigmoid function.
+- Generator: 5 layers with transposed convolutions, batch normalization, ReLUs as activation 
+ as well as a Tanh function for the final layer.
+- Discriminator: 5 layers with transposed convolutions, batch normalization and leaky ReLUs (0.2 gradient) as activation 
+as well as a Sigmoid function for the final layer.
   
 Adam was the optimizer of choice, and the explicit parameters can be found in the code. 
 
-Different data augmentations were tried, but they will be discussed in the next section. 
+Different data augmentations were tried - they will be discussed in the next section. 
 Before optimizing the hyper parameters, the defaults from the PyTorch example were used to try different training techniques.
-Early training suffered from severe mode collapse and to mitigate this, the learning rate for generator 
-and discriminator was increased and decreases respectively. This improved the results, but only with limited capabilities. 
+Early training suffered from severe mode collapse and to mitigate this, the learning rates for the generator 
+and discriminator were increased and decreased respectively. This improved the results, but only with limited success. 
 Adding noise to the discriminator input with a linear annealing schedule to the noise variance as suggested in papers and articles 
 (see references at the end) did not yield satisfying results.
 Introducing a threshold for generator and discriminator loss, where either would only be trained if above the threshold, only caused unstable training 
@@ -113,15 +112,18 @@ The significance of the latter increased, the closer the system got to the optim
 
 ### Datasets and Augmentations
 
+![image](images/frognet_dataproprocessing.png)
+Original image from [ManBroDude](https://manbrodude.art/)
+
 The frog dataset was obtained by cropped screenshotting and using photoshop to segment the background from the original motive.
 The resulting frogs were cropped again, to only focus on the frog faces and torsos, in an effort to improve the quality of the output.
-Initially, all datasets were used in combination, as a specific cropping augmentation, however, 
+Initially, all datasets were used together as a specific cropping augmentation. However, 
 towards the end of the project, all have been dropped, but the frog faces.
 The first approach yielded better results in terms of general body shape of the output frogs, however, the faces themselves were blurry at best.
 
-
-The images were resized and turned into grayscale tensors of dimensions 64x64x1, as almost all the data set is in 
-black and white and colour information would not hold any valuable information in case of the target dataset.
+The images were resized and turned into grayscale tensors of dimensions 64x64x1, as almost all the frog pictures are in 
+black and white and colour parameters would not hold any valuable information, 
+as colour differences are only due to quality fluctuations of the original posts.
 
 For all datasets, random horizontal flips were applied. For the anime faces dataset, 
 no further augmentations were implemented.
@@ -132,11 +134,11 @@ random resizing between 80% and 100% of the original size and random contrast an
 
 ### Training
 
-The final FID scores achieved after the pre-training on the anime faces dataset was 144.11 +- 4.24 after 48 Epochs
+The final FID scores achieved after the pre-training on the anime faces dataset were 144.11 +- 4.24 after 48 Epochs
 and for the final frog dataset 138.16 +- 2.17 after 2499 epochs. 
 
-As the optimal batch size was 238, the last batch of the frog dataset would be very small and cause noise updates. 
-The last batch was dropped, to avoid too noisy updates.
+As the optimal batch size was 238, the last batch of the frog dataset would have been comparably small, causing noisy update steps, hence I decided to drop it. 
+
 
 ### References, Papers and Articles
 
@@ -145,7 +147,7 @@ during this project and from which I've learned a lot.
 
 I've started from the [PyTorch DCGAN example](https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html),
 but only used the code fragments and started right off with a different dataset. 
-I would recommend the following two links from there:
+I would recommend the following two links from the same site:
 
 - [GitHub](https://github.com/soumith/ganhacks) useful GAN training hacks
 - [GitHub](https://github.com/nashory/gans-awesome-applications) list of cool GAN applications
@@ -169,9 +171,10 @@ Reference
 
 ## Usage
 
-This project is very much WIP and changes are constantly being made. The project is running on Google Colab and at the moment, only back-end modules are uploaded here.
+This project is very much WIP and changes are constantly being made. The project is being run on Google Colab and at the moment, 
+only back-end modules are uploaded here.
 
-A final, minimized jupyter notebook with all essentials will be uploaded as well together with the final models.
+A final, minimized jupyter notebook with all essentials together with the final models  will be uploaded here as well.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
